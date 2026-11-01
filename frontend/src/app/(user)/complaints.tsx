@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { addComplaint, getComplaints } from '../../services/complaintService';
+import { addComplaint, getComplaints, updateComplaint } from '../../services/complaintService';
 import { Complaint } from '../../types';
 import { formatDate } from '../../utils/formate';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,10 +14,17 @@ export default function Complaints() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const listRef = useRef<FlatList<Complaint>>(null);
 
   const load = useCallback(async () => {
-    setList(await getComplaints());
-    setLoading(false);
+    try {
+      setList(await getComplaints());
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -27,16 +34,37 @@ export default function Complaints() {
     if (!user) return;
     setError('');
     setBusy(true);
-    await addComplaint(user.userId, text);
+    try {
+      if (editingId) await updateComplaint(editingId, text);
+      else await addComplaint(text);
+      setText('');
+      setEditingId(null);
+      await load();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const startEdit = (c: Complaint) => {
+    setEditingId(c.complaintId);
+    setText(c.complaintText);
+    setError('');
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
     setText('');
-    await load();
-    setBusy(false);
+    setError('');
   };
 
   if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#00fa32" />;
 
   return (
     <FlatList
+      ref={listRef}
       style={s.screen}
       contentContainerStyle={{ padding: 16, gap: 10 }}
       data={list}
@@ -53,8 +81,13 @@ export default function Complaints() {
           />
           {!!error && <Text style={s.error}>{error}</Text>}
           <Pressable style={s.button} onPress={submit} disabled={busy}>
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.buttonText}>Submit complaint</Text>}
+            {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.buttonText}>{editingId ? 'Update complaint' : 'Submit complaint'}</Text>}
           </Pressable>
+          {editingId && (
+            <Pressable onPress={cancelEdit}>
+              <Text style={s.cancel}>Cancel editing</Text>
+            </Pressable>
+          )}
           <Text style={[s.label, { marginTop: 8 }]}>All complaints</Text>
         </View>
       }
@@ -66,6 +99,11 @@ export default function Complaints() {
               <Text style={s.name}>{item.userName ?? 'User'}</Text>
               <Text style={s.muted}>{formatDate(item.complaintDate)}</Text>
             </View>
+            {item.userId === user?.userId && (
+              <Pressable onPress={() => startEdit(item)} hitSlop={10}>
+                <Ionicons name="create-outline" size={22} color="#0B7A5E" />
+              </Pressable>
+            )}
             <Ionicons name="alert-circle" size={22} color="#F2A93B" />
           </View>
           <Text style={s.body}>{item.complaintText}</Text>
@@ -93,4 +131,5 @@ const s = StyleSheet.create({
   name: { fontSize: 15, fontWeight: '700', color: '#10201C' },
   body: { fontSize: 15, lineHeight: 22, color: '#10201C' },
   muted: { fontSize: 13, color: '#4A5A55' },
+  cancel: { textAlign: 'center', color: '#B3261E', fontWeight: '600' },
 });

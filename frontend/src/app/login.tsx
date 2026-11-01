@@ -49,7 +49,6 @@ export default function Login() {
       <Text style={s.foot}>
         No account? <Link href="/signup" style={s.link}>Sign up</Link>
       </Text>
-      <Text style={s.hint}>Test: user@test.com / admin@test.com, password 1234</Text>
     </View>
   );
 }

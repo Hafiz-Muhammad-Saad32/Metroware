@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { addLostFound, getLostFound } from '../../services/lostFoundService';
+import { addLostFound, getLostFound, updateLostFound } from '../../services/lostFoundService';
 import { LostFoundItem } from '../../types';
 import { formatDate } from '../../utils/formate';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,10 +19,17 @@ export default function LostFound() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const listRef = useRef<FlatList<LostFoundItem>>(null);
 
   const load = useCallback(async () => {
-    setList(await getLostFound());
-    setLoading(false);
+    try {
+      setList(await getLostFound());
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -32,11 +39,34 @@ export default function LostFound() {
     if (!user) return;
     setError('');
     setBusy(true);
-    await addLostFound(user.userId, { itemName, description, itemType });
+    try {
+      if (editingId) await updateLostFound(editingId, { itemName, description, itemType });
+      else await addLostFound({ itemName, description, itemType });
+      setItemName('');
+      setDescription('');
+      setEditingId(null);
+      await load();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const startEdit = (i: LostFoundItem) => {
+    setEditingId(i.itemId);
+    setItemName(i.itemName);
+    setDescription(i.description);
+    setItemType(i.itemType);
+    setError('');
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
     setItemName('');
     setDescription('');
-    await load();
-    setBusy(false);
+    setError('');
   };
 
   if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#00fa32" />;
@@ -45,6 +75,7 @@ export default function LostFound() {
 
   return (
     <FlatList
+      ref={listRef}
       style={s.screen}
       contentContainerStyle={{ padding: 16, gap: 10 }}
       data={shown}
@@ -69,7 +100,7 @@ export default function LostFound() {
 
           {!!error && <Text style={s.error}>{error}</Text>}
           <Pressable style={s.button} onPress={submit} disabled={busy}>
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.buttonText}>Post</Text>}
+            {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.buttonText}>{editingId ? 'Update post' : 'Post'}</Text>}
           </Pressable>
 
           <Text style={[s.label, { marginTop: 8 }]}>Posted by others</Text>
@@ -96,6 +127,11 @@ export default function LostFound() {
                 <Text style={s.muted}>{formatDate(item.date)}</Text>
               </View>
               <Text style={[s.pill, lost ? s.lost : s.found]}>{lost ? 'Lost' : 'Found'}</Text>
+              {item.userId === user?.userId && (
+                <Pressable onPress={() => startEdit(item)} hitSlop={10}>
+                  <Ionicons name="create-outline" size={22} color="#0B7A5E" />
+                </Pressable>
+              )}
             </View>
             <Text style={s.body}>{item.description}</Text>
             <View style={s.footer}>
@@ -146,4 +182,5 @@ const s = StyleSheet.create({
   pill: { fontSize: 12, fontWeight: '700', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99, overflow: 'hidden' },
   lost: { backgroundColor: '#FBE9E7', color: '#f7372d' },
   found: { backgroundColor: '#DDF1EA', color: '#00fa32' },
+  cancel: { textAlign: 'center', color: '#B3261E', fontWeight: '600' },
 });

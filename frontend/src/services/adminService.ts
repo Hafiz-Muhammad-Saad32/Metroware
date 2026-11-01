@@ -1,7 +1,5 @@
-import { users } from '../data/user';
 import { SessionUser } from '../types';
+import { api } from './api';
+import { EP } from './endpoints';
 
-export async function getUsers(): Promise<SessionUser[]> {
-  await new Promise((r) => setTimeout(r, 300));
-  return users.map(({ userPassword: _pw, ...u }) => u);
-}
+export const getUsers = () => api<SessionUser[]>(EP.adminUsers);

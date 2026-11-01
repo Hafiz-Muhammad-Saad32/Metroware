@@ -21,7 +21,7 @@ export default function RouteForm() {
   const nextKey = useRef(3);
 
   const [routeName, setRouteName] = useState('');
-  const [busText, setBusText] = useState('');
+  const [busCount, setBusCount] = useState('1')
   const [rows, setRows] = useState<Row[]>([
     { key: 1, name: '', coords: '' },
     { key: 2, name: '', coords: '' },
@@ -38,7 +38,7 @@ export default function RouteForm() {
       const r = routes.find((x) => x.routeId === editing);
       if (r) {
         setRouteName(r.routeName);
-        setBusText(buses.filter((b) => b.routeId === editing).map((b) => b.busNumber).join(', '));
+        setBusCount(String(Math.max(1, buses.filter((b) => b.routeId === editing).length)));
         const loaded: Row[] = stops
           .filter((s) => s.routeId === editing)
           .sort((a, b) => a.stopOrder - b.stopOrder)
@@ -72,6 +72,7 @@ export default function RouteForm() {
     setError('');
     if (!routeName.trim()) return setError('Route name is required');
     if (rows.some((r) => !r.name.trim())) return setError('Fill every stop name, or remove the empty ones');
+    if (!parseInt(busCount, 10)) return setError('Enter the number of buses (1 or more)');
 
     setBusy(true);
     try {
@@ -88,7 +89,7 @@ export default function RouteForm() {
           out.push({ stopName: name, latitude: p[0], longitude: p[1] });
         } else {
           setProgress(`Finding location ${i + 1} of ${rows.length}...`);
-          if (geocodedBefore) await sleep(1100); // Nominatim: 1 request per second
+          if (geocodedBefore) await sleep(1100);
           const g = await geocode(name);
           geocodedBefore = true;
           if (!g) {
@@ -97,8 +98,10 @@ export default function RouteForm() {
           out.push({ stopName: name, latitude: g.lat, longitude: g.lng });
         }
       }
-      const busNumbers = busText.split(',').map((x) => x.trim()).filter(Boolean);
-      await saveRoute({ routeName: routeName.trim(), stops: out, busNumbers }, editing);
+      await saveRoute(
+        { routeName: routeName.trim(), stops: out, busCount: parseInt(busCount, 10) },
+        editing
+      );
       router.back();
     } catch (e: any) {
       setError(e.message);
@@ -120,11 +123,15 @@ export default function RouteForm() {
       </View>
 
       <View>
-        <Text style={s.label}>Buses on this route (optional)</Text>
-        <TextInput style={s.input} value={busText} onChangeText={setBusText} placeholder="G-01, G-02" />
+        <Text style={s.label}>Number of buses on this route</Text>
+        <TextInput
+          style={s.input}
+          value={busCount}
+          onChangeText={(t) => setBusCount(t.replace(/\D/g, '').slice(0, 2))}
+          placeholder="e.g. 5"
+          keyboardType="number-pad"
+        />
       </View>
-
-      <Text style={s.section}>Stops ({rows.length}) in order</Text>
 
       {rows.map((r, i) => {
         const first = i === 0;

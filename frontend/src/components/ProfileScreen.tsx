@@ -3,6 +3,8 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import Avatar from './Avatar';
 import { useAuth } from '../context/AuthContext';
 import { changePassword, updateProfile } from '../services/authService';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 export default function ProfileScreen() {
   const { user, updateUser, logout } = useAuth();
@@ -19,6 +21,7 @@ export default function ProfileScreen() {
   const [pwMsg, setPwMsg] = useState('');
   const [pwErr, setPwErr] = useState('');
   const [pwBusy, setPwBusy] = useState(false);
+  const router = useRouter();
 
   if (!user) return null;
 
@@ -28,7 +31,7 @@ export default function ProfileScreen() {
     if (!name.trim() || !email.trim()) return setInfoErr('Name and email are required');
     setInfoBusy(true);
     try {
-      const updated = await updateProfile(user.userId, { userName: name, userEmail: email });
+      const updated = await updateProfile({ userName: name, userEmail: email });
       await updateUser(updated);
       setInfoMsg('Profile updated');
     } catch (e: any) {
@@ -46,7 +49,7 @@ export default function ProfileScreen() {
     if (next !== confirm) return setPwErr('New passwords do not match');
     setPwBusy(true);
     try {
-      await changePassword(user.userId, current, next);
+      await changePassword(current, next);
       setCurrent('');
       setNext('');
       setConfirm('');
@@ -68,6 +71,19 @@ export default function ProfileScreen() {
           {user.userRole === 'admin' ? 'Admin' : 'User'}
         </Text>
       </View>
+
+      {user.userRole === 'user' && (
+        <Pressable style={s.link} onPress={() => router.push('/my-tickets' as any)}>
+          <View style={s.linkIcon}>
+            <Ionicons name="ticket" size={22} color="#0B7A5E" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.linkTitle}>My tickets</Text>
+            <Text style={s.muted}>View all your booked tickets</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#4A5A55" />
+        </Pressable>
+      )}
 
       <View style={s.card}>
         <Text style={s.section}>Profile info</Text>
@@ -139,4 +155,13 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   logoutText: { color: '#B3261E', fontSize: 16, fontWeight: '600' },
+  link: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 14, flexDirection: 'row',
+    alignItems: 'center', gap: 12, borderWidth: 1, borderColor: '#E3EAE7',
+  },
+  linkIcon: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: '#DDF1EA',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  linkTitle: { fontSize: 16, fontWeight: '700', color: '#10201C' },
 });

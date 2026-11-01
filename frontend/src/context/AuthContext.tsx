@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { SESSION_KEY, setUnauthorizedHandler } from '../services/api';
 import { loginRequest, signupRequest } from '../services/authService';
 import { SessionUser } from '../types';
 import { storage } from '../utils/storage';
@@ -13,7 +14,6 @@ interface AuthState {
 }
 
 const AuthContext = createContext<AuthState | null>(null);
-const KEY = 'metroware_session';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
@@ -22,15 +22,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const saved = await storage.get(KEY);
+        const saved = await storage.get(SESSION_KEY);
         if (saved) setUser(JSON.parse(saved).user);
       } catch {}
       setLoading(false);
     })();
   }, []);
 
+  // backend 401 de (token expire) to automatically logout
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      storage.remove(SESSION_KEY);
+      setUser(null);
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
+
   const save = async (data: { token: string; user: SessionUser }) => {
-    await storage.set(KEY, JSON.stringify(data));
+    await storage.set(SESSION_KEY, JSON.stringify(data));
     setUser(data.user);
   };
 
@@ -41,15 +50,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     save(await signupRequest(name, email, password));
 
   const logout = async () => {
-    await storage.remove(KEY);
+    await storage.remove(SESSION_KEY);
     setUser(null);
   };
 
-  // profile update ke baad naya data session mein bhi rakho, token wahi rahe
+  // profile update ke baad naya data session mein rakho, token wahi rahe
   const updateUser = async (u: SessionUser) => {
-    const saved = await storage.get(KEY);
+    const saved = await storage.get(SESSION_KEY);
     const token = saved ? JSON.parse(saved).token : '';
-    await storage.set(KEY, JSON.stringify({ token, user: u }));
+    await storage.set(SESSION_KEY, JSON.stringify({ token, user: u }));
     setUser(u);
   };
 

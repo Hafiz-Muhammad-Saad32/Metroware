@@ -56,9 +56,9 @@ export default function ManageRoutes() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={s.bold}>{item.routeName}</Text>
-              <Text style={s.muted}>{item.start_stop} → {item.end_stop}</Text>
+              <Text style={s.muted}>{item.startStop} → {item.endStop}</Text>
               <Text style={s.muted}>
-                {count} stops · {nums.length ? nums.join(', ') : 'no bus assigned'}
+                {count} stops·{nums.length}  bus(es)·every 15 min
               </Text>
             </View>
             <Pressable

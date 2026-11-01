@@ -12,10 +12,9 @@ export type SessionUser = Omit<User, 'userPassword'>;
 export interface BusRoute {
   routeId: number;
   routeName: string;
-  start_stop: string;
-  end_stop: string;
+  startStop: string;
+  endStop: string;
 }
-
 export interface Bus {
   busId: number;
   busNumber: string;
@@ -43,8 +42,30 @@ export interface LostFoundItem {
   itemId: number;
   userId: number;
   userName?: string;
-  itemName: string;           // backend se add karwana
+  itemName: string;           
   description: string;
-  itemType: 'lost' | 'found'; // backend se add karwana
+  itemType: 'lost' | 'found'; 
   date: string;
+}
+
+export type PaymentMethod = 'cash' | 'easypaisa';
+
+export interface Ticket {
+  ticketId: number;
+  bookingId: number;
+  userId: number;
+  busId: number | null;
+  pickupStopId: number;
+  dropStopId: number;
+  price: number;
+  paymentMethod: PaymentMethod;
+  paymentStatus: 'paid' | 'pending';
+  transactionId: string | null;
+  bookedAt: string;
+  // join se (backend join karke bhejega)
+  userName?: string;
+  busNumber?: string;
+  routeName?: string;
+  pickupName?: string;
+  dropName?: string;
 }

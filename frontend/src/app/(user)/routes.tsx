@@ -72,11 +72,11 @@ export default function RoutesScreen() {
 
       {route && (
         <View style={s.info}>
-          <Text style={s.infoTitle}>{route.start_stop} → {route.end_stop}</Text>
+          <Text style={s.infoTitle}>{route.startStop} → {route.endStop}</Text>
           <View style={s.busRow}>
             <Ionicons name="bus" size={18} color="#0B7A5E" />
             <Text style={s.muted}>
-              {routeBuses.length ? routeBuses.map((b) => b.busNumber).join(', ') : 'No bus assigned yet'}
+              {routeBuses.length ? `${routeBuses.length} buses · one every 15 min` : 'No bus assigned yet'}
             </Text>
           </View>
         </View>

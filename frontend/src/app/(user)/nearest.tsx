@@ -1,12 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import NearestMap, { Geo } from '../../components/NearestMap';
 import { geocode } from '../../services/geocodeService';
+import { planTrip } from '../../services/routeService';
 import { busRoute, walkRoute } from '../../services/routingService';
-import { getAllStops, getBuses, getRoutes } from '../../services/routeService';
 import { formatDistance, walkMinutes } from '../../utils/distance';
-import { Plan, Point, planTrip } from '../../utils/nearest';
+import { Plan, Point } from '../../utils/nearest';
 
 export default function Nearest() {
   const [from, setFrom] = useState('');
@@ -30,9 +30,8 @@ export default function Nearest() {
       const b = await geocode(to);
       if (!b) throw new Error(`Could not find "${to}"`);
 
-      const [stops, routes, buses] = await Promise.all([getAllStops(), getRoutes(), getBuses()]);
-      const p = planTrip(a, b, routes, stops);
-      if (!p) throw new Error('No bus route found for these places');
+      // backend nearest stops aur route nikalta hai
+      const p = await planTrip(a, b);
 
       // asli sadkon wale raaste (fail ho to null, map seedhi line dikha dega)
       const boardPt = { lat: p.board.latitude, lng: p.board.longitude };
@@ -48,9 +47,7 @@ export default function Nearest() {
         toBoard: w1?.distanceKm ?? p.walkToBoardKm,
         fromDrop: w2?.distanceKm ?? p.walkFromDropKm,
       });
-      setBusNumbers(
-        buses.filter((x) => x.routeId === p.route.routeId).map((x) => x.busNumber).join(', ')
-      );
+      setBusNumbers(p.busNumbers.join(', '));
       setPoints({ origin: a, dest: b });
       setPlan(p);
     } catch (e: any) {
@@ -60,82 +57,83 @@ export default function Nearest() {
     }
   };
 
-  return (
-    <ScrollView style={s.screen} contentContainerStyle={s.content}>
-      <View>
-        <Text style={s.label}>Where you will board</Text>
-        <TextInput style={s.input} value={from} onChangeText={setFrom} placeholder="e.g. North Nazimabad" />
-      </View>
-      <View>
-        <Text style={s.label}>Where you will get off</Text>
-        <TextInput style={s.input} value={to} onChangeText={setTo} placeholder="e.g. Saddar" />
-      </View>
 
-      {!!error && <Text style={s.error}>{error}</Text>}
+return (
+  <ScrollView style={s.screen} contentContainerStyle={s.content}>
+    <View>
+      <Text style={s.label}>Where you will board</Text>
+      <TextInput style={s.input} value={from} onChangeText={setFrom} placeholder="e.g. North Nazimabad" />
+    </View>
+    <View>
+      <Text style={s.label}>Where you will get off</Text>
+      <TextInput style={s.input} value={to} onChangeText={setTo} placeholder="e.g. Saddar" />
+    </View>
 
-      <Pressable style={s.button} onPress={search} disabled={busy}>
-        {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.buttonText}>Find nearest stops</Text>}
-      </Pressable>
+    {!!error && <Text style={s.error}>{error}</Text>}
 
-      {plan && points && (
-        <>
-          <View style={[s.card, { borderLeftColor: '#0B7A5E' }]}>
-            <View style={[s.icon, { backgroundColor: '#DDF1EA' }]}>
-              <Ionicons name="log-in" size={22} color="#0B7A5E" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={s.muted}>Board at</Text>
-              <Text style={s.bold}>{plan.board.stopName}</Text>
-              <Text style={s.muted}>
-                Walk {formatDistance(walk.toBoard)} · about {walkMinutes(walk.toBoard)} min
-              </Text>
-            </View>
+    <Pressable style={s.button} onPress={search} disabled={busy}>
+      {busy ? <ActivityIndicator color="#fff" /> : <Text style={s.buttonText}>Find nearest stops</Text>}
+    </Pressable>
+
+    {plan && points && (
+      <>
+        <View style={[s.card, { borderLeftColor: '#0B7A5E' }]}>
+          <View style={[s.icon, { backgroundColor: '#DDF1EA' }]}>
+            <Ionicons name="log-in" size={22} color="#0B7A5E" />
           </View>
-
-          <View style={[s.card, { borderLeftColor: '#B3261E' }]}>
-            <View style={[s.icon, { backgroundColor: '#FBE9E7' }]}>
-              <Ionicons name="log-out" size={22} color="#B3261E" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={s.muted}>Get off at</Text>
-              <Text style={s.bold}>{plan.drop.stopName}</Text>
-              <Text style={s.muted}>
-                Walk {formatDistance(walk.fromDrop)} · about {walkMinutes(walk.fromDrop)} min
-              </Text>
-            </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.muted}>Board at</Text>
+            <Text style={s.bold}>{plan.board.stopName}</Text>
+            <Text style={s.muted}>
+              Walk {formatDistance(walk.toBoard)} · about {walkMinutes(walk.toBoard)} min
+            </Text>
           </View>
+        </View>
 
-          <View style={[s.card, { borderLeftColor: '#2563EB' }]}>
-            <View style={[s.icon, { backgroundColor: '#E5EDFD' }]}>
-              <Ionicons name="bus" size={22} color="#2563EB" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={s.muted}>Bus to take</Text>
-              <Text style={s.bold}>{plan.route.routeName}</Text>
-              <Text style={s.muted}>
-                {busNumbers ? `Buses: ${busNumbers} · ` : ''}{plan.ride.length - 1} stops
-              </Text>
-            </View>
+        <View style={[s.card, { borderLeftColor: '#B3261E' }]}>
+          <View style={[s.icon, { backgroundColor: '#FBE9E7' }]}>
+            <Ionicons name="log-out" size={22} color="#B3261E" />
           </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.muted}>Get off at</Text>
+            <Text style={s.bold}>{plan.drop.stopName}</Text>
+            <Text style={s.muted}>
+              Walk {formatDistance(walk.fromDrop)} · about {walkMinutes(walk.fromDrop)} min
+            </Text>
+          </View>
+        </View>
 
-          <View style={s.map}>
-            <NearestMap origin={points.origin} dest={points.dest} plan={plan} geo={geo} />
+        <View style={[s.card, { borderLeftColor: '#2563EB' }]}>
+          <View style={[s.icon, { backgroundColor: '#E5EDFD' }]}>
+            <Ionicons name="bus" size={22} color="#2563EB" />
           </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.muted}>Bus to take</Text>
+            <Text style={s.bold}>{plan.route.routeName}</Text>
+            <Text style={s.muted}>
+              {busNumbers ? `Buses: ${busNumbers} · ` : ''}{plan.ride.length - 1} stops
+            </Text>
+          </View>
+        </View>
 
-          <View style={s.legend}>
-            <Legend color="#2563EB" text="Your location" />
-            <Legend color="#0B7A5E" text="Board here" />
-            <Legend color="#B3261E" text="Get off here" />
-            <Legend color="#10201C" text="Destination" />
-            <View style={s.legendItem}>
-              <View style={s.dash} />
-              <Text style={s.muted}>Walking</Text>
-            </View>
+        <View style={s.map}>
+          <NearestMap origin={points.origin} dest={points.dest} plan={plan} geo={geo} />
+        </View>
+
+        <View style={s.legend}>
+          <Legend color="#2563EB" text="Your location" />
+          <Legend color="#0B7A5E" text="Board here" />
+          <Legend color="#B3261E" text="Get off here" />
+          <Legend color="#10201C" text="Destination" />
+          <View style={s.legendItem}>
+            <View style={s.dash} />
+            <Text style={s.muted}>Walking</Text>
           </View>
-        </>
-      )}
-    </ScrollView>
-  );
+        </View>
+      </>
+    )}
+  </ScrollView>
+);
 }
 
 function Legend({ color, text }: { color: string; text: string }) {

@@ -34,6 +34,9 @@ export default function UserLayout() {
       <Stack.Screen name="nearest" options={{ title: 'Nearest stop' }} />
       <Stack.Screen name="complaints" options={{ title: 'Complaints' }} />
       <Stack.Screen name="lostfound" options={{ title: 'Lost & Found' }} />
+      <Stack.Screen name="book-ticket" options={{ title: 'Book ticket' }} />
+      <Stack.Screen name="easypaisa" options={{ title: 'Easypaisa (Demo)' }} />
+      <Stack.Screen name="my-tickets" options={{ title: 'My tickets' }} />
       <Stack.Screen name="profile" options={{ title: 'My profile', headerRight: () => null }} />
     </Stack>
   );

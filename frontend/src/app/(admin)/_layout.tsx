@@ -33,6 +33,7 @@ export default function AdminLayout() {
       <Stack.Screen name="all-lostfound" options={{ title: 'Lost & Found' }} />
       <Stack.Screen name="manage-routes" options={{ title: 'Manage routes' }} />
       <Stack.Screen name="route-form" options={{ title: 'Route' }} />
+      <Stack.Screen name="all-tickets" options={{ title: 'Tickets' }} />
       <Stack.Screen name="users" options={{ title: 'All users' }} />
       <Stack.Screen name="admin-profile" options={{ title: 'My profile', headerRight: () => null }} />
     </Stack>

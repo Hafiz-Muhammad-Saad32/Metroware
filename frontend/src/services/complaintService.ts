@@ -1,32 +1,19 @@
-import { complaints } from '../data/complaints';
-import { users } from '../data/user';
 import { Complaint } from '../types';
+import { api } from './api';
+import { EP } from './endpoints';
 
-const wait = (ms = 300) => new Promise((r) => setTimeout(r, ms));
+export const getComplaints = () => api<Complaint[]>(EP.complaints);
 
-const withName = (c: Complaint): Complaint => ({
-  ...c,
-  userName: users.find((u) => u.userId === c.userId)?.userName,
-});
+// userId token se aata hai, isliye parameter hata diya
+export const addComplaint = (complaintText: string) =>
+  api<Complaint>(EP.complaints, { method: 'POST', body: { complaintText: complaintText.trim() } });
 
-export async function getComplaints(): Promise<Complaint[]> {
-  await wait();
-  return complaints.map(withName).sort((a, b) => b.complaintDate.localeCompare(a.complaintDate));
-}
-
-// backend mein userId token se aayega, tab ye parameter hat jayega
-export async function addComplaint(userId: number, complaintText: string) {
-  await wait();
-  complaints.push({
-    complaintId: Math.max(0, ...complaints.map((c) => c.complaintId)) + 1,
-    userId,
-    complaintText: complaintText.trim(),
-    complaintDate: new Date().toISOString(),
+export const updateComplaint = (complaintId: number, complaintText: string) =>
+  api<Complaint>(EP.complaint(complaintId), {
+    method: 'PUT',
+    body: { complaintText: complaintText.trim() },
   });
-}
 
-export async function deleteComplaint(complaintId: number) {
-  await wait();
-  const i = complaints.findIndex((c) => c.complaintId === complaintId);
-  if (i >= 0) complaints.splice(i, 1);
+export async function deleteComplaint(complaintId: number): Promise<void> {
+  await api(EP.complaint(complaintId), { method: 'DELETE' });
 }

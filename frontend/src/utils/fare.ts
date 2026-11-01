@@ -1,0 +1,1 @@
+export const fareForKm = (km: number) => (km <= 15 ? 80 : 120);

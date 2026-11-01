@@ -1,5 +1,9 @@
-export const BASE_URL = 'http://192.168.x.x:8080/api'; // apna laptop IP
-export const USE_MOCK = true; // backend ready hone pe false
+import { Platform } from 'react-native';
+
+const LAN_IP = '192.168.1.12'; // <-- apni laptop ki IP yahan likho
+
+export const BASE_URL =
+  Platform.OS === 'web' ? 'http://localhost:8080/api' : `http://${LAN_IP}:8080/api`;
 
 export const EP = {
   signup: '/auth/signup',
@@ -16,4 +20,10 @@ export const EP = {
   lostFound: '/lost-found',
   lostFoundItem: (id: number) => `/lost-found/${id}`,
   adminUsers: '/admin/users',
+  tickets: '/tickets',
+  myTickets: '/tickets/my',
+  adminTickets: '/admin/tickets',
+  bookingPaid: (bookingId: number) => `/admin/tickets/booking/${bookingId}/paid`,
+  profile: '/users/me',
+  changePassword: '/users/me/password',
 };
