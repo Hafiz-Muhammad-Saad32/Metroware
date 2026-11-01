@@ -289,7 +289,7 @@ metroware/
 
 ### 1. Clone
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Hafiz-Muhammad-Saad32/Metroware
 cd metroware
 ```
 
@@ -400,23 +400,9 @@ and point the frontend `BASE_URL` to the `https://` address.
 
 ---
 
-## 📸 Screenshots
-
-<!-- Add screenshots to docs/screenshots/ and uncomment:
-| Login | Nearest route | Book ticket |
-|---|---|---|
-| ![Login](docs/screenshots/login.png) | ![Nearest](docs/screenshots/nearest.png) | ![Book](docs/screenshots/book.png) |
-
-| My tickets | Admin dashboard | Manage routes |
-|---|---|---|
-| ![Tickets](docs/screenshots/tickets.png) | ![Dashboard](docs/screenshots/dashboard.png) | ![Routes](docs/screenshots/routes.png) |
--->
-
----
-
 ## 👤 Author
 
-**<Your Name>** · <University / Department> · DBMS course project
+**Muhammad Saad** · <DUET / BSCS> · DBMS course project
 
 - GitHub: [@your-username](https://github.com/your-username)
 - LinkedIn: [your-profile](https://www.linkedin.com/in/your-profile)
