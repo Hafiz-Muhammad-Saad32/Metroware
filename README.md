@@ -404,8 +404,8 @@ and point the frontend `BASE_URL` to the `https://` address.
 
 **Muhammad Saad** · <DUET / BSCS> · DBMS course project
 
-- GitHub: [@your-username](https://github.com/your-username)
-- LinkedIn: [your-profile](https://www.linkedin.com/in/your-profile)
+- GitHub: [@hafiz-muhammad-saad32](https://github.com/hafiz-muhammad-saad32)
+- LinkedIn: [muhammad-saad-cs042](https://www.linkedin.com/in/muhammad-saad-cs042)
 
 ## 📄 License
 
